@@ -8,3 +8,8 @@ Mi página web personal con estética de terminal interactiva y animaciones en C
 * **JavaScript (Vanilla)** - Lógica de terminal y dinámicas de texto.
 
 🔒 *No cookies, no tracking.*
+
+---
+
+### 🤖 Desarrollo y Colaboración
+Proyecto diseñado y dirigido por **Claudia**, desarrollado con asistencia de **Claude AI** (*Prompt Engineering, generación de código y optimización de animaciones*).
