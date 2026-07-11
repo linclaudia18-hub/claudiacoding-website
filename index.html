@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>claudiacoding · 你好</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #1e1e2e;
+    --surface: #23233a;
+    --surface-2: #2a2a44;
+    --text: #cdd6f4;
+    --muted: #8a8fb9;
+    --purple: #cba6f7;
+    --green: #a6e3a1;
+    --yellow: #f9e2af;
+    --blue: #89b4fa;
+    --pink: #f5c2e7;
+    --red: #f38ba8;
+    --catcolor: #fab387;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    background: var(--bg);
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(203,166,247,0.06), transparent 40%),
+      radial-gradient(circle at 80% 70%, rgba(137,180,250,0.06), transparent 40%);
+    color: var(--text);
+    font-family: 'JetBrains Mono', 'Consolas', monospace;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 16px;
+    position: relative;
+  }
+
+  /* ---------- 浮动问候气泡层 ---------- */
+  #bubble-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+
+  .bubble {
+    position: absolute;
+    bottom: -40px;
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+    white-space: nowrap;
+    background: var(--surface);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    font-family: -apple-system, "Segoe UI", "Noto Sans", "Noto Sans SC", "Noto Sans Arabic",
+                 "Noto Sans Devanagari", "Noto Sans Thai", "Noto Sans Hebrew", sans-serif;
+    opacity: 0;
+    animation-name: float-up;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+  }
+
+  @keyframes float-up {
+    0%   { opacity: 0; transform: translateY(0) scale(0.9); }
+    8%   { opacity: 1; transform: translateY(-6vh) scale(1); }
+    85%  { opacity: 0.9; }
+    100% { opacity: 0; transform: translateY(-105vh) scale(1); }
+  }
+
+  /* ---------- 终端窗口 ---------- */
+  .terminal {
+    position: relative;
+    z-index: 2;
+    width: min(680px, 92vw);
+    background: var(--surface);
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+
+  .terminal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 24px 70px rgba(0,0,0,0.55);
+  }
+
+  .terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.red { background: var(--red); }
+  .dot.yellow { background: var(--yellow); }
+  .dot.green { background: var(--green); }
+
+  .terminal-title {
+    margin: 0 auto;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: .3px;
+  }
+
+  .terminal-body {
+    padding: 26px 28px 30px;
+    font-size: 14px;
+    line-height: 1.9;
+  }
+
+  .line { color: var(--muted); }
+  .prompt { color: var(--green); }
+  .path { color: var(--blue); }
+  .cmd { color: var(--text); }
+
+  .hero-block {
+    margin-top: 6px;
+  }
+
+  .hero-line {
+    font-size: clamp(22px, 5vw, 34px);
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: .5px;
+    min-height: 1.4em;
+  }
+
+  .hero-line .out { color: var(--yellow); }
+
+  .cursor {
+    display: inline-block;
+    width: 10px;
+    height: 1.05em;
+    background: var(--purple);
+    vertical-align: text-bottom;
+    margin-left: 2px;
+    animation: blink 1s steps(1) infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .sub {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .sub b { color: var(--pink); font-weight: 500; }
+
+  .translated {
+    font-size: 12px;
+    font-style: italic;
+    opacity: .65;
+    margin-top: 2px;
+  }
+  .line.translated { margin-top: 0; }
+
+  .hint {
+    margin-top: 18px;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: .7;
+  }
+
+  /* ---------- 颜文字猫 ---------- */
+  #kaomoji-wrap {
+    position: relative;
+    z-index: 2;
+    margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  #kaomoji-cat {
+    font-size: 34px;
+    line-height: 1;
+    color: var(--catcolor);
+    user-select: none;
+    animation: bob 2.4s ease-in-out infinite;
+    transition: opacity .15s ease;
+  }
+
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+  }
+
+  #kaomoji-caption {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  footer {
+    position: relative;
+    z-index: 2;
+    margin-top: 34px;
+    font-size: 11px;
+    color: var(--muted);
+    opacity: .6;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bubble { animation: none !important; opacity: 0 !important; }
+    .cursor { animation: none; }
+    #kaomoji-cat { animation: none; }
+  }
+
+  a { color: var(--blue); }
+  a:focus-visible, .terminal:focus-visible {
+    outline: 2px solid var(--purple);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+  <div id="bubble-layer"></div>
+
+  <main class="terminal" id="terminal" tabindex="0" role="button" aria-label="点击重新播放欢迎动画">
+    <div class="terminal-bar">
+      <span class="dot red"></span>
+      <span class="dot yellow"></span>
+      <span class="dot green"></span>
+      <span class="terminal-title">claudiacoding — zsh — 80x24</span>
+    </div>
+    <div class="terminal-body">
+      <div class="line"><span class="prompt">➜</span> <span class="path">~/claudiacoding</span> <span class="cmd">whoami</span></div>
+      <div class="line">一个还在学习、偶尔发呆的开发者</div>
+      <div class="line translated">Un desarrollador que sigue aprendiendo (y a veces se queda pensando en las nubes)</div>
+      <div class="line" style="margin-top:10px;"><span class="prompt">➜</span> <span class="path">~/claudiacoding</span> <span class="cmd">echo $GREETING</span></div>
+      <div class="hero-block">
+        <div class="hero-line" id="hero-zh"><span class="out" id="hero-text-zh"></span><span class="cursor" id="hero-cursor"></span></div>
+      </div>
+      <div class="sub">这个网站本来快被我遗忘了，<b>不用可惜</b>，所以重新点亮它。</div>
+      <div class="sub translated">Este sitio casi cae en el olvido — sería una pena no usarlo, así que decidí revivirlo.</div>
+      <div class="hint">点击这个窗口可以重新播放动画 ✦</div>
+    </div>
+  </main>
+
+  <div id="kaomoji-wrap">
+    <div id="kaomoji-cat">(=^･ω･^=)</div>
+    <div id="kaomoji-caption">— 一只颜文字猫，蹲在这里卖萌 —</div>
+  </div>
+
+  <footer>
+    claudiacoding · built with HTML / CSS / JS · no cookies, no tracking
+  </footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= 打字机效果 ================= */
+  var heroTextZh = "欢迎来到我的网站";
+  var heroZhTextEl = document.getElementById('hero-text-zh');
+  var typingTimer = null;
+
+  function typeText(targetEl, text, speed, onDone){
+    var i = 0;
+    (function step(){
+      if (i <= text.length) {
+        targetEl.textContent = text.slice(0, i);
+        i++;
+        typingTimer = setTimeout(step, speed);
+      } else if (onDone) {
+        typingTimer = setTimeout(onDone, 400);
+      }
+    })();
+  }
+
+  function typeHero(){
+    clearTimeout(typingTimer);
+    heroZhTextEl.textContent = "";
+
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduceMotion) {
+      heroZhTextEl.textContent = heroTextZh;
+      return;
+    }
+
+    typeText(heroZhTextEl, heroTextZh, 130);
+  }
+  typeHero();
+
+  /* ================= 多语言问候气泡 ================= */
+  var greetings = [
+    // 你好
+    "你好", "Hello", "Bonjour", "Hola", "Ciao", "Hallo",
+    "こんにちは", "안녕하세요", "Привет", "مرحبا", "नमस्ते",
+    "Γεια σου", "Merhaba", "Xin chào", "สวัสดี", "Olá",
+    "שלום", "Cześć", "Chào bạn", "Kamusta", "Hallå",
+    // 欢迎
+    "欢迎", "Welcome", "Bienvenue", "Bienvenido", "Benvenuto",
+    "Willkommen", "ようこそ", "환영합니다", "Добро пожаловать",
+    "أهلاً وسهلاً", "स्वागत है", "Καλώς ήρθες", "Hoş geldin",
+    "Chào mừng", "ยินดีต้อนรับ", "Bem-vindo", "ברוך הבא",
+    "Witaj", "Maligayang pagdating", "Välkommen"
+  ];
+  var colors = ["--purple","--green","--yellow","--blue","--pink"];
+
+  var bubbleLayer = document.getElementById('bubble-layer');
+  var reduceMotionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  function spawnBubble(){
+    if (reduceMotionMQ.matches) return;
+    var b = document.createElement('div');
+    b.className = 'bubble';
+    b.textContent = greetings[Math.floor(Math.random() * greetings.length)];
+
+    var color = colors[Math.floor(Math.random() * colors.length)];
+    b.style.color = 'var(' + color + ')';
+    b.style.borderColor = 'color-mix(in srgb, var(' + color + ') 35%, transparent)';
+
+    var left = 4 + Math.random() * 88; // vw
+    var duration = 7 + Math.random() * 6; // seconds
+    var delay = Math.random() * 0.4;
+    var size = 12 + Math.random() * 4;
+
+    b.style.left = left + 'vw';
+    b.style.fontSize = size + 'px';
+    b.style.animationDuration = duration + 's';
+    b.style.animationDelay = delay + 's';
+
+    bubbleLayer.appendChild(b);
+    setTimeout(function(){
+      if (b.parentNode) b.parentNode.removeChild(b);
+    }, (duration + delay + 0.5) * 1000);
+  }
+
+  var spawnInterval = setInterval(spawnBubble, 900);
+  // 初始来一小波，页面一打开就热闹起来
+  for (var k = 0; k < 4; k++) {
+    setTimeout(spawnBubble, k * 250);
+  }
+
+  function burst(n){
+    for (var j = 0; j < n; j++) {
+      setTimeout(spawnBubble, j * 90);
+    }
+  }
+
+  /* 点击终端：重播打字机 + 来一波问候气泡 */
+  var terminalEl = document.getElementById('terminal');
+  function replay(){
+    typeHero();
+    burst(6);
+  }
+  terminalEl.addEventListener('click', replay);
+  terminalEl.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      replay();
+    }
+  });
+
+  /* ================= 颜文字猫 ================= */
+  var catFrames = [
+    "(=^･ω･^=)",
+    "(=^･ω･^=)",
+    "(=^･ω･^=)",
+    "(=^･ｪ･^=)",   // 眨眼
+    "(=^･ω･^=)",
+    "(=^･ω･^=)ﾉ"   // 挥爪
+  ];
+  var catEl = document.getElementById('kaomoji-cat');
+  var catIndex = 0;
+
+  function nextCatFrame(){
+    catEl.style.opacity = '0.4';
+    setTimeout(function(){
+      catIndex = (catIndex + 1) % catFrames.length;
+      catEl.textContent = catFrames[catIndex];
+      catEl.style.opacity = '1';
+    }, 90);
+  }
+
+  if (!reduceMotionMQ.matches) {
+    setInterval(nextCatFrame, 1500);
+  }
+
+})();
+</script>
+</body>
+</html>
